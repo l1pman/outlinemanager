@@ -1,0 +1,33 @@
+FROM python:3.10.9
+
+
+RUN mkdir -p /home/app
+
+RUN groupadd --system app && useradd --system app -g app
+
+
+ENV HOME=/home/app
+ENV APP_HOME=/home/app/web
+RUN mkdir $APP_HOME
+RUN mkdir $APP_HOME/staticfiles
+WORKDIR $APP_HOME
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && apt-get install -y netcat
+
+RUN pip install --upgrade pip
+COPY ./req.txt .
+RUN pip install -r req.txt
+
+COPY ./entrypoint.prod.sh .
+RUN chmod a+x $APP_HOME/entrypoint.prod.sh
+
+COPY . $APP_HOME
+
+RUN chown -R app:app $APP_HOME
+
+USER app
+
+ENTRYPOINT ["/home/app/web/entrypoint.prod.sh"]
